@@ -9,6 +9,7 @@ type DB = (Datastore, Session);
 
 #[tokio::main]
 async fn main() -> Result<()> {
+    // Create a new database and session in memory.
     let db: &DB = &(
         Datastore::new("memory").await?,
         Session::for_db("test", "test"),
@@ -24,6 +25,11 @@ async fn main() -> Result<()> {
 
     // Get the task
     let sql = "SELECT * FROM task WHERE title = 'test2'";
+    let response = ds.execute(sql, &session, None, false).await?;
+    println!("response: {:?}", response);
+
+    // Update the task
+    let sql = "UPDATE task:2 SET done = true";
     let response = ds.execute(sql, &session, None, false).await?;
     println!("response: {:?}", response);
 
