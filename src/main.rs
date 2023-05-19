@@ -5,11 +5,15 @@ use surrealdb::dbs::{Response, Session};
 use surrealdb::kvs::Datastore;
 use surrealdb::sql::{thing, Datetime, Object, Thing, Value};
 
+type DB = (Datastore, Session);
+
 #[tokio::main]
 async fn main() -> Result<()> {
-    let ds = Datastore::new("memory").await?;
-
-    let session = Session::for_db("test", "test");
+    let db: &DB = &(
+        Datastore::new("memory").await?,
+        Session::for_db("test", "test"),
+    );
+    let (ds, session) = db;
 
     // Create a new task
     let sql = "CREATE task:1 SET title = 'test', done = false";
