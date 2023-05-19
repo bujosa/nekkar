@@ -19,7 +19,7 @@ async fn main() -> Result<()> {
     let response = ds.execute(sql, &session, None, false).await?;
 
     // Get the task
-    let sql = "GET task:2";
+    let sql = "SELECT * FROM task WHERE title = 'test2'";
     let response = ds.execute(sql, &session, None, false).await?;
     println!("response: {:?}", response);
 
