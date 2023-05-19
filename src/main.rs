@@ -33,5 +33,10 @@ async fn main() -> Result<()> {
     let response = ds.execute(sql, &session, None, false).await?;
     println!("response: {:?}", response);
 
+    // Delete the task
+    let sql = "DELETE task:2";
+    let response = ds.execute(sql, &session, None, false).await?;
+    println!("response: {:?}", response);
+
     Ok(())
 }
