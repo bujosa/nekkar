@@ -38,5 +38,10 @@ async fn main() -> Result<()> {
     let response = ds.execute(sql, &session, None, false).await?;
     println!("response: {:?}", response);
 
+    // Get all tasks
+    let sql = "SELECT * FROM task";
+    let response = ds.execute(sql, &session, None, false).await?;
+    println!("response: {:?}", response);
+
     Ok(())
 }
