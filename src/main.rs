@@ -18,10 +18,13 @@ async fn main() -> Result<()> {
 
     // Create a new task
     let sql = "CREATE task:1 SET title = 'test', done = false";
-    let response = ds.execute(sql, &session, None, false).await?;
+    ds.execute(sql, &session, None, false).await?;
 
     let sql = "CREATE task:2 SET title = 'test2', done = false";
-    let response = ds.execute(sql, &session, None, false).await?;
+    ds.execute(sql, &session, None, false).await?;
+
+    let sql = "CREATE task:3 SET title = 'test3', done = false";
+    ds.execute(sql, &session, None, false).await?;
 
     // Get the task
     let sql = "SELECT * FROM task WHERE title = 'test2'";
@@ -30,13 +33,11 @@ async fn main() -> Result<()> {
 
     // Update the task
     let sql = "UPDATE task:2 SET done = true";
-    let response = ds.execute(sql, &session, None, false).await?;
-    println!("response: {:?}", response);
+    ds.execute(sql, &session, None, false).await?;
 
     // Delete the task
     let sql = "DELETE task:2";
-    let response = ds.execute(sql, &session, None, false).await?;
-    println!("response: {:?}", response);
+    ds.execute(sql, &session, None, false).await?;
 
     // Get all tasks
     let sql = "SELECT * FROM task";
