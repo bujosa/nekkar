@@ -17,32 +17,42 @@ async fn main() -> Result<()> {
     let (ds, session) = db;
 
     // Create a new task
-    let sql = "CREATE task:1 SET title = 'test', done = false";
-    ds.execute(sql, &session, None, false).await?;
+    create_task(db, "Refactor the code").await?;
+    create_task(db, "Test the code").await?;
+    create_task(db, "Document the code").await?;
 
-    let sql = "CREATE task:2 SET title = 'test2', done = false";
-    ds.execute(sql, &session, None, false).await?;
+    // // Get the task
+    // let sql = "SELECT * FROM task WHERE title = 'test2'";
+    // let response = ds.execute(sql, &session, None, false).await?;
+    // println!("response: {:?}", response);
 
-    let sql = "CREATE task:3 SET title = 'test3', done = false";
-    ds.execute(sql, &session, None, false).await?;
+    // // Update the task
+    // let sql = "UPDATE task:2 SET done = true";
+    // ds.execute(sql, &session, None, false).await?;
 
-    // Get the task
-    let sql = "SELECT * FROM task WHERE title = 'test2'";
-    let response = ds.execute(sql, &session, None, false).await?;
-    println!("response: {:?}", response);
+    // // Delete the task
+    // let sql = "DELETE task:2";
+    // ds.execute(sql, &session, None, false).await?;
 
-    // Update the task
-    let sql = "UPDATE task:2 SET done = true";
-    ds.execute(sql, &session, None, false).await?;
+    // // Get all tasks
+    // let sql = "SELECT * FROM task";
+    // let response = ds.execute(sql, &session, None, false).await?;
+    // println!("response: {:?}", response);
 
-    // Delete the task
-    let sql = "DELETE task:2";
-    ds.execute(sql, &session, None, false).await?;
+    Ok(())
+}
 
-    // Get all tasks
+async fn create_task(db: &DB, title: &str) -> Result<()> {
+    let (ds, session) = db;
+    let sql = format!("CREATE task SET title = '{}', done = false", title);
+    ds.execute(&sql, &session, None, false).await?;
+    Ok(())
+}
+
+async fn get_all_task(db: &DB) -> Result<()> {
+    let (ds, session) = db;
     let sql = "SELECT * FROM task";
     let response = ds.execute(sql, &session, None, false).await?;
     println!("response: {:?}", response);
-
     Ok(())
 }
