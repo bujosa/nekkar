@@ -1,8 +1,9 @@
 #![allow(unused)]
 use anyhow::{anyhow, Result};
 use std::collections::BTreeMap;
+use surrealdb::dbs::{Response, Session};
+use surrealdb::kvs::Datastore;
 use surrealdb::sql::{thing, Datetime, Object, Thing, Value};
-use surrealdb::{Datastore, Response, Session};
 
 #[tokio::main]
 async fn main() -> Result<()> {
@@ -10,11 +11,17 @@ async fn main() -> Result<()> {
 
     let session = Session::for_db("test", "test");
 
+    // Create a new task
     let sql = "CREATE task:1 SET title = 'test', done = false";
-
     let response = ds.execute(sql, &session, None, false).await?;
 
-    println!("{:?}", response);
+    let sql = "CREATE task:2 SET title = 'test2', done = false";
+    let response = ds.execute(sql, &session, None, false).await?;
+
+    // Get the task
+    let sql = "GET task:2";
+    let response = ds.execute(sql, &session, None, false).await?;
+    println!("response: {:?}", response);
 
     Ok(())
 }
