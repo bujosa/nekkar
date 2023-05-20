@@ -75,3 +75,10 @@ async fn update_task(db: &DB, id: String, done: bool) -> Result<()> {
     ds.execute(&sql, &session, None, false).await?;
     Ok(())
 }
+
+async fn delete_task(db: &DB, id: String) -> Result<()> {
+    let (ds, session) = db;
+    let sql = format!("DELETE task:{}", id);
+    ds.execute(&sql, &session, None, false).await?;
+    Ok(())
+}
