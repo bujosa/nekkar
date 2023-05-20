@@ -1,11 +1,17 @@
 #![allow(unused)]
-use anyhow::{anyhow, Result};
-use std::collections::BTreeMap;
+use anyhow::{anyhow, Ok, Result};
 use surrealdb::dbs::{Response, Session};
 use surrealdb::kvs::Datastore;
 use surrealdb::sql::{thing, Datetime, Object, Thing, Value};
 
 type DB = (Datastore, Session);
+
+#[derive(Debug)]
+struct Task {
+    id: String,
+    title: String,
+    done: bool,
+}
 
 #[tokio::main]
 async fn main() -> Result<()> {
@@ -18,26 +24,13 @@ async fn main() -> Result<()> {
 
     // Create a new task
     create_task(db, "Refactor the code").await?;
-    create_task(db, "Test the code").await?;
-    create_task(db, "Document the code").await?;
+    // create_task(db, "Test the code").await?;
+    // create_task(db, "Document the code").await?;
 
-    // // Get the task
-    // let sql = "SELECT * FROM task WHERE title = 'test2'";
-    // let response = ds.execute(sql, &session, None, false).await?;
-    // println!("response: {:?}", response);
+    // Get all tasks
+    get_all_task(db).await?;
 
-    // // Update the task
-    // let sql = "UPDATE task:2 SET done = true";
-    // ds.execute(sql, &session, None, false).await?;
-
-    // // Delete the task
-    // let sql = "DELETE task:2";
-    // ds.execute(sql, &session, None, false).await?;
-
-    // // Get all tasks
-    // let sql = "SELECT * FROM task";
-    // let response = ds.execute(sql, &session, None, false).await?;
-    // println!("response: {:?}", response);
+    // Get a task
 
     Ok(())
 }
@@ -45,7 +38,18 @@ async fn main() -> Result<()> {
 async fn create_task(db: &DB, title: &str) -> Result<()> {
     let (ds, session) = db;
     let sql = format!("CREATE task SET title = '{}', done = false", title);
-    ds.execute(&sql, &session, None, false).await?;
+    let res = ds.execute(&sql, &session, None, false).await?;
+    // Extract first result
+    let first_result = res.into_iter().next().unwrap();
+
+    // Extract id from first result
+    let task = first_result.result?.first();
+
+    // This is the task result task: Object(Object({"done": False, "id": Thing(Thing { tb: "task", id: String("ip943vi2jqvu0kmgczx0") }), "title": Strand(Strand("Refactor the code"))}))
+    // transform task into a Task struct
+
+    println!("task: {:?}", task);
+
     Ok(())
 }
 
@@ -54,5 +58,20 @@ async fn get_all_task(db: &DB) -> Result<()> {
     let sql = "SELECT * FROM task";
     let response = ds.execute(sql, &session, None, false).await?;
     println!("response: {:?}", response);
+    Ok(())
+}
+
+async fn get_task(db: &DB, id: String) -> Result<()> {
+    let (ds, session) = db;
+    let sql = format!("SELECT * FROM task WHERE id = {}", id);
+    let response = ds.execute(&sql, &session, None, false).await?;
+    println!("response: {:?}", response);
+    Ok(())
+}
+
+async fn update_task(db: &DB, id: String, done: bool) -> Result<()> {
+    let (ds, session) = db;
+    let sql = format!("UPDATE task:{} SET done = {}", id, done);
+    ds.execute(&sql, &session, None, false).await?;
     Ok(())
 }

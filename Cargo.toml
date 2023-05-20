@@ -7,5 +7,6 @@ edition = "2021"
 
 [dependencies]
 anyhow = "1.0.71"
+serde = { version = "1.0.136", features = ["derive"]}
 surrealdb = {version = "1.0.0-beta.9",  features = ["kv-mem"]}
 tokio = { version = "1",  features = ["full"] }
