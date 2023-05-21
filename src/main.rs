@@ -28,7 +28,7 @@ async fn main() -> Result<()> {
     create_task(db, "Document the code").await?;
 
     // Get all tasks
-    // get_all_task(db).await?;
+    get_all_task(db).await?;
 
     // Get a task
     let result = get_task(db, task1.id.clone()).await?;
