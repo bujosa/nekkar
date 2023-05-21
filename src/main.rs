@@ -28,9 +28,18 @@ async fn main() -> Result<()> {
     create_task(db, "Document the code").await?;
 
     // Get all tasks
-    get_all_task(db).await?;
+    // get_all_task(db).await?;
 
     // Get a task
+    let result = get_task(db, task1.id.clone()).await?;
+    println!("get task: {:?}", result);
+
+    // Update a task
+    let result = update_task(db, task1.id.clone(), true).await?;
+    println!("update task: {:?}", result);
+
+    // Delete a task
+    delete(db, task1.id.clone()).await?;
 
     Ok(())
 }
@@ -64,24 +73,48 @@ async fn get_all_task(db: &DB) -> Result<()> {
     Ok(())
 }
 
-async fn get_task(db: &DB, id: String) -> Result<()> {
+async fn get_task(db: &DB, id: String) -> Result<Task> {
     let (ds, session) = db;
     let sql = format!("SELECT * FROM task WHERE id = {}", id);
     let response = ds.execute(&sql, &session, None, false).await?;
-    println!("response: {:?}", response);
-    Ok(())
+
+    // Return the Task
+    let task = into_iter_objects(response)?
+        .next()
+        .transpose()?
+        .and_then(|obj| {
+            let id = obj.get("id")?.to_string();
+            let title = obj.get("title")?.to_string();
+            let done = obj.get("done")?.to_string().parse::<bool>().is_ok();
+            Some(Task { id, title, done })
+        })
+        .ok_or_else(|| anyhow!("No task found."));
+
+    Ok(task?)
 }
 
-async fn update_task(db: &DB, id: String, done: bool) -> Result<()> {
+async fn update_task(db: &DB, id: String, done: bool) -> Result<Task> {
     let (ds, session) = db;
-    let sql = format!("UPDATE task:{} SET done = {}", id, done);
-    ds.execute(&sql, &session, None, false).await?;
-    Ok(())
+    let sql = format!("UPDATE {} SET done = {}", id, done);
+    let res = ds.execute(&sql, &session, None, false).await?;
+
+    let task = into_iter_objects(res)?
+        .next()
+        .transpose()?
+        .and_then(|obj| {
+            let id = obj.get("id")?.to_string();
+            let title = obj.get("title")?.to_string();
+            let done = obj.get("done")?.to_string().parse::<bool>().is_ok();
+            Some(Task { id, title, done })
+        })
+        .ok_or_else(|| anyhow!("No task found."));
+
+    Ok(task?)
 }
 
-async fn delete_task(db: &DB, id: String) -> Result<()> {
+async fn delete(db: &DB, id: String) -> Result<()> {
     let (ds, session) = db;
-    let sql = format!("DELETE task:{}", id);
+    let sql = format!("DELETE {}", id);
     ds.execute(&sql, &session, None, false).await?;
     Ok(())
 }
