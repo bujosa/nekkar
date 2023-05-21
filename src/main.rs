@@ -23,9 +23,9 @@ async fn main() -> Result<()> {
     let (ds, session) = db;
 
     // Create a new task
-    create_task(db, "Refactor the code").await?;
-    // create_task(db, "Test the code").await?;
-    // create_task(db, "Document the code").await?;
+    let task1 = create_task(db, "Refactor the code").await?;
+    create_task(db, "Test the code").await?;
+    create_task(db, "Document the code").await?;
 
     // Get all tasks
     get_all_task(db).await?;
@@ -35,22 +35,25 @@ async fn main() -> Result<()> {
     Ok(())
 }
 
-async fn create_task(db: &DB, title: &str) -> Result<()> {
+async fn create_task(db: &DB, title: &str) -> Result<Task> {
     let (ds, session) = db;
     let sql = format!("CREATE task SET title = '{}', done = false", title);
     let res = ds.execute(&sql, &session, None, false).await?;
-    // Extract first result
-    let first_result = res.into_iter().next().unwrap();
 
-    // Extract id from first result
-    let task = first_result.result?.first();
+    let id = into_iter_objects(res)?
+        .next()
+        .transpose()?
+        .and_then(|obj| obj.get("id").map(|id| id.to_string()))
+        .ok_or_else(|| anyhow!("No id returned."));
 
-    // This is the task result task: Object(Object({"done": False, "id": Thing(Thing { tb: "task", id: String("ip943vi2jqvu0kmgczx0") }), "title": Strand(Strand("Refactor the code"))}))
-    // transform task into a Task struct
+    // Return the Task
+    let task = Task {
+        id: id?,
+        title: title.to_string(),
+        done: false,
+    };
 
-    println!("task: {:?}", task);
-
-    Ok(())
+    Ok(task)
 }
 
 async fn get_all_task(db: &DB) -> Result<()> {
@@ -81,4 +84,19 @@ async fn delete_task(db: &DB, id: String) -> Result<()> {
     let sql = format!("DELETE task:{}", id);
     ds.execute(&sql, &session, None, false).await?;
     Ok(())
+}
+
+fn into_iter_objects(ress: Vec<Response>) -> Result<impl Iterator<Item = Result<Object>>> {
+    let res = ress.into_iter().next().map(|rp| rp.result).transpose()?;
+
+    match res {
+        Some(Value::Array(arr)) => {
+            let it = arr.into_iter().map(|v| match v {
+                Value::Object(object) => Ok(object),
+                _ => Err(anyhow!("A record was not an Object")),
+            });
+            Ok(it)
+        }
+        _ => Err(anyhow!("No records found.")),
+    }
 }
